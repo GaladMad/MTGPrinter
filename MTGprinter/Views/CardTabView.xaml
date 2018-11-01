@@ -1,0 +1,158 @@
+﻿<UserControl x:Class="MTGprinter.Views.CardTabView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:local="clr-namespace:MTGprinter.Views"
+             xmlns:viewModels="clr-namespace:MTGprinter.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="480" d:DesignWidth="840">
+
+    <!--<UserControl.DataContext>
+        <viewModels:CardTabViewModel/>
+    </UserControl.DataContext>-->
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Canvas-->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="10"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+            </Grid.ColumnDefinitions>
+
+            <Image Grid.Row="1" Grid.Column="2"
+                   Margin="5,5,5,5"                   
+                   Source="{Binding Source, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <Grid Grid.Row="1" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                </Grid.ColumnDefinitions>
+
+
+                <Image Grid.Row="1" Grid.Column="1" Margin="5,5,5,5" 
+                       Source="{Binding PreviousSource, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                    <Image.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding PreviousCard, Mode=OneTime}" />
+                    </Image.InputBindings>
+                </Image>
+
+            </Grid>
+
+            <Grid Grid.Row="1" Grid.Column="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                </Grid.ColumnDefinitions>
+
+                <Image Grid.Row="1" Grid.Column="1" Margin="5,5,5,5" Source="{Binding NextSource, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                    <Image.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding NextCard, Mode=OneTime}" />
+                    </Image.InputBindings>
+                </Image>
+            </Grid>
+        </Grid>
+        <Separator Grid.Column="1" >
+            <Separator.LayoutTransform>
+                <RotateTransform Angle="90" />
+            </Separator.LayoutTransform>
+        </Separator>
+
+        <!--Cards settings-->
+        <Grid Grid.Column="2" Margin="5,5,5,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="5"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="5"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Content="Cards settings" Foreground="DarkGray"/>
+            <Button Grid.Row="1" Name="bDownloadCards" Command="{Binding DownloadCards}" Content="Download cards" Margin="5,5,5,5"/>
+            <Separator Grid.Row="2"/>
+            
+            <!--Set contrast and brightness-->
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="25"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>               
+                <Label Grid.Column="0" Content="Set contrast:" Foreground="DarkGray"/>
+                <Label Grid.Column="1" Content="{Binding ContrastValue}" Foreground="DarkGray"/>
+                <CheckBox Grid.Column="2" IsChecked="{Binding ContrastForAll}" Command="{Binding SetContrastForAll}" Content="All" Foreground="DarkGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Grid>
+            <Slider Grid.Row="4" Value="{Binding ContrastValue}" HorizontalAlignment="Stretch"  VerticalAlignment="Top" Maximum="20" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="PreviewMouseUp">
+                        <i:InvokeCommandAction Command="{Binding ChangeContrast}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Slider>
+            <Grid Grid.Row="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="25"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Content="Set brightness:" Foreground="DarkGray"/>
+                <Label Grid.Column="1" Content="{Binding BrightnessValue}" Foreground="DarkGray"/>
+                <CheckBox Grid.Column="2" IsChecked="{Binding BrightnessForAll}" Command="{Binding SetBrightnessForAll}" Content="All" Foreground="DarkGray" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Grid>
+            <Slider Grid.Row="6" Value="{Binding BrightnessValue}" HorizontalAlignment="Stretch"  VerticalAlignment="Top" Maximum="20" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="PreviewMouseUp">
+                        <i:InvokeCommandAction Command="{Binding ChangeBrightness}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Slider>
+            <Separator Grid.Row="7"/>
+
+            <!--Save changes-->
+            <!--<Label Grid.Row="8" Content="Save changes:" Foreground="DarkGray"/>
+            <Grid Grid.Row="9">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Name="bSaveOne" Command="{Binding SaveCurrentCard}" Content="For this" Margin="5,5,5,5"/>
+                <Button Grid.Column="1" Name="bSaveAll" Command="{Binding SaveAllCards}" Content="For all" Margin="5,5,5,5"/>
+            </Grid>
+            <Separator Grid.Row="10"/>-->
+    </Grid>
+    </Grid>
+</UserControl>
