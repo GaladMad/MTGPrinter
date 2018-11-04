@@ -37,7 +37,11 @@
 
             <Image Grid.Row="1" Grid.Column="2"
                    Margin="5,5,5,5"                   
-                   Source="{Binding Source, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+                   Source="{Binding Source, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                <Image.InputBindings>
+                    <MouseBinding Gesture="LeftClick" Command="{Binding ChangeMode, Mode=OneTime}" />
+                </Image.InputBindings>
+            </Image>
 
             <Grid Grid.Row="1" Grid.Column="1">
                 <Grid.RowDefinitions>

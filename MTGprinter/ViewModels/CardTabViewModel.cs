@@ -25,6 +25,13 @@ namespace MTGprinter.ViewModels
         private string brightnessValue;
         private string contrastForAll;
         private string brightnessForAll;
+        public Mode CardMode;
+        
+        public enum Mode
+        {
+            Avers = 0,
+            Reverse
+        }
 
         #endregion
 
@@ -109,7 +116,8 @@ namespace MTGprinter.ViewModels
         public ICommand SaveCurrentCard { get; set; }
         public ICommand SaveAllCards { get; set; }
         public ICommand SetContrastForAll { get; set; }
-        public ICommand SetBrightnessForAll { get; set; }           
+        public ICommand SetBrightnessForAll { get; set; }
+        public ICommand ChangeMode { get; set; }
         public Card CurrentCard { get; set; }
 
         #endregion
@@ -134,14 +142,19 @@ namespace MTGprinter.ViewModels
             PreviousCard = new RelayCommand(new Action<object>(moveToLeft));
             ChangeContrast = new RelayCommand(new Action<object>(changeContrast));
             ChangeBrightness = new RelayCommand(new Action<object>(changeBrightness));
-            SaveCurrentCard = new RelayCommand(new Action<object>(saveCurrentCard));
-            SaveAllCards = new RelayCommand(new Action<object>(saveAllCards));
+            //SaveCurrentCard = new RelayCommand(new Action<object>(saveCurrentCard));
+            //SaveAllCards = new RelayCommand(new Action<object>(saveAllCards));
             SetContrastForAll = new RelayCommand(new Action<object>(setContrastForAll));
             SetBrightnessForAll = new RelayCommand(new Action<object>(setBrightnessForAll));
+            ChangeMode = new RelayCommand(new Action<object>(changeMode));
 
             ContrastValue = "0";
             BrightnessValue = "0";
-        }
+
+            CardMode = Mode.Avers;
+
+
+        }        
 
         #endregion
 
@@ -159,8 +172,12 @@ namespace MTGprinter.ViewModels
                 Searcher mysearcher = new Searcher();
                 foreach (var card in Parent.UserDeck.Cards)
                 {
-                    card.Source = Directory.GetCurrentDirectory() + mysearcher.searchCard(card.Name, Parent.UserDeck.Name);
-                    card.TempSource = Directory.GetCurrentDirectory() + "\\Temp" + mysearcher.searchCard(card.Name, Parent.UserDeck.Name);
+                    List<string> sourcesToFiles = mysearcher.searchCard(card.Name, Parent.UserDeck.Name);
+                    card.Source = Directory.GetCurrentDirectory() + sourcesToFiles[0];
+                    card.TempSource = Directory.GetCurrentDirectory() + "\\Temp" + sourcesToFiles[0];
+
+                    card.BackSource = Directory.GetCurrentDirectory() + sourcesToFiles[1];
+                    card.BackTempSource = Directory.GetCurrentDirectory() + "\\Temp" + sourcesToFiles[1];
                 }
 
                 CurrentCard = Parent.UserDeck.Cards[0];
@@ -174,9 +191,21 @@ namespace MTGprinter.ViewModels
         {
             if (isConditionsFulfilled())
             {
-                CurrentCard.Contrast = Int32.Parse(ContrastValue);
-                CurrentCard.SaveCard();
-                Source = CurrentCard.GetAwers();
+                switch (CardMode)
+                {
+                    case Mode.Avers:
+                        CurrentCard.Contrast = Int32.Parse(ContrastValue);
+                        CurrentCard.SaveAvers();
+                        Source = CurrentCard.GetAvers();
+                        break;
+                    case Mode.Reverse:
+                        CurrentCard.BackContrast = Int32.Parse(ContrastValue);
+                        CurrentCard.SaveReverse();
+                        Source = CurrentCard.GetReverse();
+                        break;
+                    default:
+                        break;
+                }                
             }
         }
 
@@ -184,34 +213,46 @@ namespace MTGprinter.ViewModels
         {
             if (isConditionsFulfilled())
             {
-                CurrentCard.Brightness = Int32.Parse(BrightnessValue);
-                CurrentCard.SaveCard();
-                Source = CurrentCard.GetAwers();
-            }
-        }
-
-        private void saveCurrentCard(object obj)
-        {
-            if (isConditionsFulfilled())
-            {
-                CurrentCard.SaveCard();
-                setImages(CurrentCard);
-            }
-        }
-
-        private void saveAllCards(object obj)
-        {
-            if (isConditionsFulfilled())
-            {
-                foreach (var card in Parent.UserDeck.Cards)
+                switch (CardMode)
                 {
-                    card.Contrast = CurrentCard.Contrast;
-                    card.Brightness = CurrentCard.Brightness;
-                    card.SaveCard();
-                }
-                setImages(CurrentCard);
+                    case Mode.Avers:
+                        CurrentCard.Brightness = Int32.Parse(BrightnessValue);
+                        CurrentCard.SaveAvers();
+                        Source = CurrentCard.GetAvers();
+                        break;
+                    case Mode.Reverse:
+                        CurrentCard.BackBrightness = Int32.Parse(BrightnessValue);
+                        CurrentCard.SaveReverse();
+                        Source = CurrentCard.GetReverse();
+                        break;
+                    default:
+                        break;
+                }                
             }
         }
+
+        //private void saveCurrentCard(object obj)
+        //{
+        //    if (isConditionsFulfilled())
+        //    {
+        //        CurrentCard.SaveAvers();
+        //        setImages(CurrentCard);
+        //    }
+        //}
+
+        //private void saveAllCards(object obj)
+        //{
+        //    if (isConditionsFulfilled())
+        //    {
+        //        foreach (var card in Parent.UserDeck.Cards)
+        //        {
+        //            card.Contrast = CurrentCard.Contrast;
+        //            card.Brightness = CurrentCard.Brightness;
+        //            card.SaveAvers();
+        //        }
+        //        setImages(CurrentCard);
+        //    }
+        //}
 
         public void moveToLeft(object obj)
         {
@@ -224,9 +265,7 @@ namespace MTGprinter.ViewModels
                     CurrentCard = temp;
                 }
 
-                setImages(CurrentCard);
-                ContrastValue = Convert.ToString(CurrentCard.Contrast);
-                BrightnessValue = Convert.ToString(CurrentCard.Brightness);
+                updateView();  
             }
         }
 
@@ -241,9 +280,7 @@ namespace MTGprinter.ViewModels
                     CurrentCard = temp;
                 }
 
-                setImages(CurrentCard);
-                ContrastValue = Convert.ToString(CurrentCard.Contrast);
-                BrightnessValue = Convert.ToString(CurrentCard.Brightness);
+                updateView();
             }
         }
 
@@ -255,19 +292,46 @@ namespace MTGprinter.ViewModels
                 {
                     foreach (var card in Parent.UserDeck.Cards)
                     {
-                        card.Brightness = Convert.ToInt32(BrightnessValue);
-                        card.SaveCard();
+                        switch (CardMode)
+                        {
+                            case Mode.Avers:
+                                card.Brightness = Convert.ToInt32(BrightnessValue);
+                                card.SaveAvers();
+                                break;
+                            case Mode.Reverse:
+                                card.BackBrightness = Convert.ToInt32(BrightnessValue);
+                                card.SaveReverse();
+                                break;
+                            default:
+                                break;
+                        }                        
                     }
                 }
                 else
                 {
-                    foreach (var card in Parent.UserDeck.Cards)
+                    switch (CardMode)
                     {
-                        card.Brightness = 0;
-                        card.SaveCard();
-                    }
-                    CurrentCard.Brightness = Convert.ToInt32(BrightnessValue);
-                    CurrentCard.SaveCard();
+                        case Mode.Avers:
+                            foreach (var card in Parent.UserDeck.Cards)
+                            {
+                                card.Brightness = 0;
+                                card.SaveAvers();
+                            }
+                            CurrentCard.Brightness = Convert.ToInt32(BrightnessValue);
+                            CurrentCard.SaveAvers();
+                            break;
+                        case Mode.Reverse:
+                            foreach (var card in Parent.UserDeck.Cards)
+                            {
+                                card.BackBrightness = 0;
+                                card.SaveReverse();
+                            }
+                            CurrentCard.BackBrightness = Convert.ToInt32(BrightnessValue);
+                            CurrentCard.SaveReverse();
+                            break;
+                        default:
+                            break;
+                    }                    
                 }
 
                 setImages(CurrentCard);
@@ -282,24 +346,68 @@ namespace MTGprinter.ViewModels
                 {
                     foreach (var card in Parent.UserDeck.Cards)
                     {
-                        card.Contrast = Convert.ToInt32(ContrastValue);
-                        card.SaveCard();
+                        switch (CardMode)
+                        {
+                            case Mode.Avers:
+                                card.Contrast = Convert.ToInt32(ContrastValue);
+                                card.SaveAvers();
+                                break;
+                            case Mode.Reverse:
+                                card.BackContrast = Convert.ToInt32(ContrastValue);
+                                card.SaveReverse();
+                                break;
+                            default:
+                                break;
+                        }                        
                     }
                 }
                 else
                 {
-                    foreach (var card in Parent.UserDeck.Cards)
+                    switch (CardMode)
                     {
-                        card.Contrast = 0;
-                        card.SaveCard();
+                        case Mode.Avers:
+                            foreach (var card in Parent.UserDeck.Cards)
+                            {
+                                card.Contrast = 0;
+                                card.SaveAvers();
+                            }
+                            CurrentCard.Contrast = Convert.ToInt32(ContrastValue);
+                            CurrentCard.SaveAvers();
+                            break;
+                        case Mode.Reverse:
+                            foreach (var card in Parent.UserDeck.Cards)
+                            {
+                                card.BackContrast = 0;
+                                card.SaveReverse();
+                            }
+                            CurrentCard.BackContrast = Convert.ToInt32(ContrastValue);
+                            CurrentCard.SaveReverse();
+                            break;
+                        default:
+                            break;
                     }
-                    CurrentCard.Contrast = Convert.ToInt32(ContrastValue);
-                    CurrentCard.SaveCard();
                 }
 
                 setImages(CurrentCard);
             }
         }
+
+        private void changeMode(object obj)
+        {
+            switch (CardMode)
+            {
+                case Mode.Avers:
+                    CardMode = Mode.Reverse;                    
+                    break;
+                case Mode.Reverse:
+                    CardMode = Mode.Avers;
+                    break;
+                default:
+                    break;
+            }
+
+            updateView();
+        }        
 
         #endregion
 
@@ -307,9 +415,21 @@ namespace MTGprinter.ViewModels
 
         private void setImages(Card card)
         {
-            PreviousSource = Parent.UserDeck.GetPreviousDifferentCard(card).GetAwers();
-            Source = card.GetAwers();
-            NextSource = Parent.UserDeck.GetNextDifferentCard(card).GetAwers();
+            switch (CardMode)
+            {
+                case Mode.Avers:
+                    PreviousSource = Parent.UserDeck.GetPreviousDifferentCard(card).GetAvers();
+                    Source = card.GetAvers();
+                    NextSource = Parent.UserDeck.GetNextDifferentCard(card).GetAvers();
+                    break;
+                case Mode.Reverse:
+                    PreviousSource = Parent.UserDeck.GetPreviousDifferentCard(card).GetReverse();
+                    Source = card.GetReverse();
+                    NextSource = Parent.UserDeck.GetNextDifferentCard(card).GetReverse();
+                    break;
+                default:
+                    break;
+            }            
         }
 
         private bool isConditionsFulfilled()
@@ -317,6 +437,25 @@ namespace MTGprinter.ViewModels
             bool result = (CurrentCard != null && CurrentCard != Card.NullCard()) ? true : false;
             return result;
         }
+
+        private void updateView()
+        {
+            setImages(CurrentCard);
+            switch (CardMode)
+            {
+                case Mode.Avers:
+                    ContrastValue = Convert.ToString(CurrentCard.Contrast);
+                    BrightnessValue = Convert.ToString(CurrentCard.Brightness);
+                    break;
+                case Mode.Reverse:
+                    ContrastValue = Convert.ToString(CurrentCard.BackContrast);
+                    BrightnessValue = Convert.ToString(CurrentCard.BackBrightness);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         #endregion
     }
 }

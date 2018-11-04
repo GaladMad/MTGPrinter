@@ -12,7 +12,7 @@ namespace MTGprinter.Models
 {
     public class DocPreparator
     {
-        public List<string> preparePrint(Deck deck, string backgroundSource)
+        public List<string> preparePrint(Deck deck, string backgroundSource, bool withReverses)
         {
             //Bitmap background = new Bitmap(bmp, new Size(4960, 7016));
             //Bitmap picture = new Bitmap($"Images/New/{source}.png");
@@ -27,7 +27,8 @@ namespace MTGprinter.Models
                     PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream($"Images/{deck.Name}/{deck.Name}{i}.pdf", FileMode.Create));
                     using (Bitmap bmp = new Bitmap(backgroundSource))
                     {
-                        for (int k = 0; k < 9 && cardCounter < deck.Cards.Count; k++)                        {
+                        for (int k = 0; k < 9 && cardCounter < deck.Cards.Count; k++)
+                        {
                             using (Bitmap card = new Bitmap($"Images/{deck.Name}/{deck.Cards[cardCounter].Name}.png"))//, new Size(120, 170));
                             {                                   //Pen blackPen = new Pen(Color.Black, 3);
                                                                 //test
@@ -81,6 +82,72 @@ namespace MTGprinter.Models
                 }
                 resultList.Add($"Images/{deck.Name}/{deck.Name}{i}.png");
                 //doc.Close();
+
+                //Temporary solution TODO: change position for reverses and refactor code
+                if (withReverses)
+                {
+                    using (Document doc = new Document(PageSize.A4, 0f, 0f, 0f, 0f))
+                    {
+                        PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream($"Images/{deck.Name}/{deck.Name}Back{i}.pdf", FileMode.Create));
+                        using (Bitmap bmp = new Bitmap(backgroundSource))
+                        {
+                            cardCounter = 0;
+                            for (int k = 0; k < 9 && cardCounter < deck.Cards.Count; k++)
+                            {
+
+                                if(deck.Cards[cardCounter].BackSource == Directory.GetCurrentDirectory() + $"\\Images\\{deck.Name}\\MTGback.png")
+                                {
+                                    using (Bitmap card = new Bitmap($"Images/{deck.Name}/MTGback.png"))
+                                    {
+                                        Color whichColor = card.GetPixel(0, 0);
+                                        // Draw line to screen.
+                                        using (var graphics = Graphics.FromImage(bmp))
+                                        {
+                                            graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 1434, 2031);
+                                        }
+                                    }
+                                    bmp.Save($"Images/{deck.Name}/{deck.Name}Back{i}.png");
+                                    doc.Open();
+                                }
+                                else
+                                {
+                                    using (Bitmap card = new Bitmap($"Images/{deck.Name}/{deck.Cards[cardCounter].Name}Back.png"))
+                                    {
+                                        Color whichColor = card.GetPixel(0, 0);
+                                        // Draw line to screen.
+                                        using (var graphics = Graphics.FromImage(bmp))
+                                        {
+                                            graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 1434, 2031);
+                                        }
+                                    }
+                                    bmp.Save($"Images/{deck.Name}/{deck.Name}Back{i}.png");
+                                    doc.Open();
+                                }                                
+
+                                try
+                                {
+                                    string imageURL = $"Images/{deck.Name}/{deck.Name}Back{i}.png";
+                                    iTextSharp.text.Image jpg = iTextSharp.text.Image.GetInstance(imageURL);
+
+                                    //Resize image depend upon your need
+                                    jpg.ScaleToFit(iTextSharp.text.PageSize.A4.Width, iTextSharp.text.PageSize.A4.Height);
+                                    jpg.Alignment = Element.ALIGN_LEFT;
+                                    doc.Add(jpg);
+                                }
+
+                                catch (Exception ex)
+
+                                { throw ex; }
+
+                                cardCounter++;
+                            }
+                        }
+                        doc.Close();
+                    }
+                    resultList.Add($"Images/{deck.Name}/{deck.Name}Back{i}.png");
+                }               
+
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
 
             return resultList;

@@ -23,10 +23,14 @@ namespace MTGprinter.Models
         public int No { get; set; }
         public string Source { get; set; }
         public string TempSource { get; set; }
+        public string BackSource { get; set; }
+        public string BackTempSource { get; set; }
         public int Page { get; set; }
         public Point Position { get; set; }
         public int Contrast { get; set; }
         public int Brightness { get; set; }
+        public int BackContrast { get; set; }
+        public int BackBrightness { get; set; }
 
         #endregion
 
@@ -35,19 +39,24 @@ namespace MTGprinter.Models
             return new Card() { Name = string.Empty, Source = string.Empty };
         }
 
-        public void SaveCard()
+        public void SaveAvers()
         {
-            SaveCardToSource(Source);
+            SaveCardToSource(Source, TempSource, Contrast, Brightness);
         }
 
-        //public void SaveTempCard()
-        //{
-        //    SaveCardToSource(TempSource);
-        //}
+        public void SaveReverse()
+        {
+            SaveCardToSource(BackSource, BackTempSource, BackContrast, BackBrightness);
+        }
 
-        public ImageSource GetAwers()
+        public ImageSource GetAvers()
         {
             return BitmapEx.GetImage(Source);
+        }
+
+        public ImageSource GetReverse()
+        {
+            return BitmapEx.GetImage(BackSource);
         }
 
         //public ImageSource GetTempAwers()
@@ -63,12 +72,12 @@ namespace MTGprinter.Models
 
         //    //return result;
         //}
-        
-        private void SaveCardToSource(string source)
+
+        private void SaveCardToSource(string source, string tempSource, int contrast, int brightness)
         {
-            Bitmap card = new Bitmap(TempSource);
-            card = BitmapEx.Contrast(card, Contrast);
-            card = BitmapEx.Brightness(card, Brightness);
+            Bitmap card = new Bitmap(tempSource);
+            card = BitmapEx.Contrast(card, contrast);
+            card = BitmapEx.Brightness(card, brightness);
             Bitmap newCard = new Bitmap(card);
             card.Dispose();
             newCard.Save(source);

@@ -12,9 +12,9 @@ namespace MTGprinter.Models
 {
     public class Searcher
     {
-        public string searchCard(string cardName, string deckName)
+        public List<string> searchCard(string cardName, string deckName)
         {
-            //http://mtg.wtf/card?q=brazen+scourge
+            List<string> result = new List<string>();
 
             string htmlName = cardName.Replace(' ', '+').ToLower(); ;
 
@@ -24,38 +24,66 @@ namespace MTGprinter.Models
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(input);
 
-            HtmlNode htmlDiv = htmlDoc.DocumentNode.SelectSingleNode("//body/div/div/div/div");
+            HtmlNodeCollection htmlDiv = htmlDoc.DocumentNode.SelectNodes("//div[@class='card_picture_container']");
 
             HtmlDocument htmlDoc2 = new HtmlDocument();
-            htmlDoc2.LoadHtml(htmlDiv.InnerHtml);
+            htmlDoc2.LoadHtml(htmlDiv.First().InnerHtml);
 
             HtmlNodeCollection htmlTags = htmlDoc2.DocumentNode.SelectNodes("//img");
             //var htmlTag = htmlDoc.DocumentNode.SelectSingleNode("//body/div/div/div/div/img");
             //http://mtg.wtf/cards_hq/kld/107.png
 
-            for (int i = 0; i < htmlTags.Count; i++)
+            Searcher file = new Searcher();
+            Directory.CreateDirectory($"Images/{deckName}/");
+            Directory.CreateDirectory($"Temp/Images/{deckName}/");
+
+            if (htmlTags != null)
             {
-                string src = $"http://mtg.wtf{htmlTags[i].Attributes["src"].Value}";
-                //string name = cardName;//htmlTags[i].Attributes["alt"].Value;
-                //-----------------------------------------------------------------------------------------
-                //name = name.Replace("&#39;", "'");
-                //-----------------------------------------------------------------------------------------
-                Searcher file = new Searcher();
-
-                Directory.CreateDirectory($"Images/{deckName}/");
-                Directory.CreateDirectory($"Temp/Images/{deckName}/");
-                string[] existedFiles = Directory.GetFiles($"Images/{deckName}/");
-                var hashExistedFiles = new HashSet<string>(existedFiles);
-                if (!hashExistedFiles.Contains($"Images/{deckName}/{cardName}.png"))
+                for (int i = 0; i < htmlTags.Count; i++)
                 {
-                    file.downloadFile(src, cardName, htmlName, deckName);
-                }
+                    string src = $"http://mtg.wtf{htmlTags[i].Attributes["src"].Value}";
 
-                DirectoryCopy($"Images/{deckName}/", $"Temp/Images/{deckName}/", true);
-                //Console.WriteLine("-----------" + src);
+                    if (i == 0)
+                    {
+                        string[] existedFiles = Directory.GetFiles($"Images/{deckName}/");
+                        var hashExistedFiles = new HashSet<string>(existedFiles);
+                        if (!hashExistedFiles.Contains($"Images/{deckName}/{cardName}.png"))
+                        {
+                            file.downloadFile(src, cardName, htmlName, deckName);
+                            File.Copy($"Images/{deckName}/{cardName}.png", $"Temp/Images/{deckName}/{cardName}.png");
+                        }
+                        result.Add($"\\Images\\{deckName}\\{cardName}.png");
+                    }
+                    else if (i == 1)
+                    {
+                        string[] existedFiles = Directory.GetFiles($"Images/{deckName}/");
+                        var hashExistedFiles = new HashSet<string>(existedFiles);
+                        if (!hashExistedFiles.Contains($"Images/{deckName}/{cardName}Back.png"))
+                        {
+                            file.downloadFile(src, cardName+"Back", htmlName, deckName);
+                            File.Copy($"Images/{deckName}/{cardName}Back.png", $"Temp/Images/{deckName}/{cardName}Back.png");
+                        }
+                        result.Add($"\\Images\\{deckName}\\{cardName}Back.png");
+                    }                  
+                    //DirectoryCopy($"Images/{deckName}/", $"Temp/Images/{deckName}/", true);//------------------------------------------------------------------------------
+                    //Console.WriteLine("-----------" + src);
+                }
             }
 
-            return $"\\Images\\{deckName}\\{cardName}.png";
+            if (result.Count == 1)
+            {
+                string[] existedFiles = Directory.GetFiles($"Images/{deckName}/");
+                var hashExistedFiles = new HashSet<string>(existedFiles);
+                if (!hashExistedFiles.Contains($"Images/{deckName}/MTGback.png"))
+                {
+                    File.Copy($"Templates/MTGback.png", $"Images/{deckName}/MTGback.png");
+                    File.Copy($"Templates/MTGback.png", $"Temp/Images/{deckName}/MTGback.png");
+                }
+                result.Add($"\\Images\\{deckName}\\MTGback.png");
+            }
+
+
+            return result;// $"\\Images\\{deckName}\\{cardName}.png";
         }
 
         //src="http://mtg.wtf/cards_hq/ne/101.png"
@@ -94,43 +122,43 @@ namespace MTGprinter.Models
             return astr;
         }
 
-        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
-        {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+        //private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        //{
+        //    // Get the subdirectories for the specified directory.
+        //    DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
-            if (!dir.Exists)
-            {
-                throw new DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
-            }
+        //    if (!dir.Exists)
+        //    {
+        //        throw new DirectoryNotFoundException(
+        //            "Source directory does not exist or could not be found: "
+        //            + sourceDirName);
+        //    }
 
-            DirectoryInfo[] dirs = dir.GetDirectories();
-            // If the destination directory doesn't exist, create it.
-            Directory.Delete(destDirName,true);
-            if (!Directory.Exists(destDirName))
-            {
-                Directory.CreateDirectory(destDirName);
-            }
+        //    DirectoryInfo[] dirs = dir.GetDirectories();
+        //    // If the destination directory doesn't exist, create it.
+        //    Directory.Delete(destDirName,true);
+        //    if (!Directory.Exists(destDirName))
+        //    {
+        //        Directory.CreateDirectory(destDirName);
+        //    }
 
-            // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
-            foreach (FileInfo file in files)
-            {
-                string temppath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(temppath, false);
-            }
+        //    // Get the files in the directory and copy them to the new location.
+        //    FileInfo[] files = dir.GetFiles();
+        //    foreach (FileInfo file in files)
+        //    {
+        //        string temppath = Path.Combine(destDirName, file.Name);
+        //        file.CopyTo(temppath, false);
+        //    }
 
-            // If copying subdirectories, copy them and their contents to new location.
-            if (copySubDirs)
-            {
-                foreach (DirectoryInfo subdir in dirs)
-                {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
-                }
-            }
-        }
+        //    // If copying subdirectories, copy them and their contents to new location.
+        //    if (copySubDirs)
+        //    {
+        //        foreach (DirectoryInfo subdir in dirs)
+        //        {
+        //            string temppath = Path.Combine(destDirName, subdir.Name);
+        //            DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+        //        }
+        //    }
+        //}
     }
 }
