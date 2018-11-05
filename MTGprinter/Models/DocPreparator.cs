@@ -38,7 +38,8 @@ namespace MTGprinter.Models
                                 {
                                     //graphics.DrawLine(blackPen, x1, y1, x2, y2);
                                     //card = Extension.Contrast(card, 12);------------------------------------------------------------------------------------------------------------------------------------
-                                    graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 1434, 2031);
+                                    //graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 1434, 2031);
+                                    graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 500, 700);
                                     //graphics.DrawImage(card, 188, 305, 1434, 2031);
                                     //graphics.DrawImage(card, 1763, 305, 1434, 2031);
 
@@ -103,7 +104,8 @@ namespace MTGprinter.Models
                                         // Draw line to screen.
                                         using (var graphics = Graphics.FromImage(bmp))
                                         {
-                                            graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 1434, 2031);
+                                            int tempX = -(deck.Cards[cardCounter].Position.X - 827) + 827 - 500;
+                                            graphics.DrawImage(card, tempX, deck.Cards[cardCounter].Position.Y, 500, 700);
                                         }
                                     }
                                     bmp.Save($"Images/{deck.Name}/{deck.Name}Back{i}.png");
@@ -117,7 +119,8 @@ namespace MTGprinter.Models
                                         // Draw line to screen.
                                         using (var graphics = Graphics.FromImage(bmp))
                                         {
-                                            graphics.DrawImage(card, deck.Cards[cardCounter].Position.X, deck.Cards[cardCounter].Position.Y, 1434, 2031);
+                                            int tempX = -(deck.Cards[cardCounter].Position.X - 827) + 827 - 500;
+                                            graphics.DrawImage(card, tempX, deck.Cards[cardCounter].Position.Y, 500, 700);
                                         }
                                     }
                                     bmp.Save($"Images/{deck.Name}/{deck.Name}Back{i}.png");

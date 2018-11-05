@@ -56,7 +56,8 @@ namespace MTGprinter.Models
                         nextCard.No = number;
 
                         int posnum = number % 9;
-                        nextCard.Position = new System.Drawing.Point(187 + (posnum % 3) * 1576, 304 + (posnum / 3) * 2189);
+                        //nextCard.Position = new System.Drawing.Point(187 + (posnum % 3) * 1576, 304 + (posnum / 3) * 2189);
+                        nextCard.Position = new System.Drawing.Point(51 + (posnum % 3) * 526, 78 + (posnum / 3) * 741);
 
                         Cards.Add(nextCard);
 
