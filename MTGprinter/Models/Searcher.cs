@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -107,7 +108,28 @@ namespace MTGprinter.Models
 
             using (WebClient webClient = new WebClient())
             {
-                webClient.DownloadFile(src, $"Images/{deckName}/{name}.png");// - html-{cnme}.png");
+                using (Bitmap tempBitmap = new Bitmap(webClient.OpenRead(src)))
+                {
+                    Color color = tempBitmap.GetPixel(0, 0);
+                    if(color.A > 205 && color.R < 50 && color.G < 50 && color.B < 50)
+                    {
+                        using(Bitmap frame = new Bitmap(Directory.GetCurrentDirectory() + "\\Templates\\Frame.png"))
+                        {
+                            using(Graphics g = Graphics.FromImage(frame))
+                            {
+                                g.DrawImage(tempBitmap, 10, 10, 480, 680);
+                            }
+
+                            frame.Save($"Images/{deckName}/{name}.png");
+                        }
+                    }
+                    else
+                    {
+                        tempBitmap.Save($"Images/{deckName}/{name}.png");
+                    }
+
+                }
+                    //webClient.DownloadFile(src, $"Images/{deckName}/{name}.png");// - html-{cnme}.png");
             }
         }
 
